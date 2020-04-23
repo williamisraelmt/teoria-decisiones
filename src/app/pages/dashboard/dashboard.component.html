@@ -1,0 +1,192 @@
+<ng-container [formGroup]="form">
+
+  <div class="row">
+    <div class="col-12" style="display: flex">
+      <div style="flex: 1; flex-shrink: 0;"></div>
+      <nz-space>
+        <nz-space-item *ngIf="reports$ | async as reports">
+          <nz-select nzShowSearch nzAllowClear nzPlaceHolder="Reporte"  formControlName="report">
+            <nz-option *ngFor="let report of reports" [nzLabel]="report.description"
+                       [nzValue]="report.code"></nz-option>
+          </nz-select>
+        </nz-space-item>
+        <nz-space-item>
+          <nz-range-picker  formControlName="date" [nzAllowClear]="false" [nzFormat]="'MM-dd-yyyy'"></nz-range-picker>
+        </nz-space-item>
+        <nz-space-item>
+          <nz-button-group>
+            <button nz-button nzType="default">
+              <label nz-checkbox [formControl]="comparisonEnabled"></label>
+            </button>
+            <button nz-button nzType="primary" *ngIf="comparisonEnabled.value; else comparisonDisabled"
+                    (click)="displayComparisonModal()">
+              <i nz-icon nzType="column-width" nzTheme="outline"></i>
+              Comparación
+            </button>
+            <ng-template #comparisonDisabled>
+              <button nz-button nzType="dashed" disabled>
+                <i nz-icon nzType="column-width" nzTheme="outline"></i>
+                Comparación
+              </button>
+            </ng-template>
+          </nz-button-group>
+        </nz-space-item>
+        <nz-button-group>
+          <button nz-button nzType="default">
+            <label nz-checkbox [formControl]="filterEnabled"></label>
+          </button>
+          <button nz-button nzType="primary" *ngIf="filterEnabled.value; else filterDisabled"
+                  (click)="displayFilterModal()">
+            <i nz-icon nzType="search" nzTheme="outline"></i>
+            Filtros
+          </button>
+          <ng-template #filterDisabled>
+            <button nz-button nzType="dashed" disabled>
+              <i nz-icon nzType="search" nzTheme="outline"></i>
+              Filtros
+            </button>
+          </ng-template>
+        </nz-button-group>
+      </nz-space>
+    </div>
+  </div>
+
+  <div class="row" *ngIf="widgetsData$ | async as widgetData">
+    <div class="col-md-3" style="margin-top: 1rem" *ngFor="let widget of widgetData">
+      <nz-card class="ant-card ant-card-bordered">
+        <div class="ant-card-body">
+          <div class="ant-statistic">
+            <div class="ant-statistic-title">{{widget.title}}</div>
+            <div class="ant-statistic-content">
+              <span class="ant-statistic-content-value">
+                    <span class="ant-statistic-content-value-int" style="font-size: 2rem">{{widget.value   | number : '1.2-2'}}</span>
+              </span>
+              <small *ngIf="form.get('comparison.enabled').value" class="ant-statistic-content-value-int"
+                     [ngStyle]="{'color': widget.negative === 'less' ?
+                        (widget.value < widget.comparison_value ? 'rgb(207, 19, 34)' : 'rgb(30,114,26)' ) :
+                        (widget.value < widget.comparison_value ? 'rgb(30,114,26)' : 'rgb(207, 19, 34)'  )
+                         }"
+                     style="
+                margin-left: .2rem;
+                position: absolute;
+                bottom: .7rem;
+                right: .7rem;
+                font-weight: 400">
+                {{ widget.value > widget.comparison_value ? '&#9650;' : '&#9660;'}}
+                {{
+                (widget.value - widget.comparison_value )  | number : '1.2-2'
+                }}
+              </small>
+            </div>
+          </div>
+        </div>
+      </nz-card>
+    </div>
+  </div>
+
+  <ng-container *ngIf="report$ | async as report">
+    <div class="row">
+      <div class="col-12" style="margin-top: 1rem">
+        <nz-card [nzTitle]="report.description" [nzExtra]="reportsCard" class="n-p-b">
+          <div class="row">
+            <div class="col">
+              <div id="chartdiv" style="width: 100%; height: 400px"></div>
+            </div>
+          </div>
+          <div class="row" style="border-top: 1px solid #f0f0f0" *ngIf="selectedChartColumn">
+            <div
+              [ngClass]="{'col-6': form.get('comparison.enabled').value, 'col-12': !form.get('comparison.enabled').value}"
+              style="padding: 1rem;">
+              <h4>{{selectedChartColumn['current_date']}}</h4>
+              <ng-container *ngFor="let v of selectedChartColumn['events']['current']; let i = index">
+                <nz-tag [nzColor]="wayItAffectsTag[v['way_it_affects']]">{{v['description']}}</nz-tag>
+              </ng-container>
+            </div>
+            <div class="col-6" *ngIf="form.get('comparison.enabled').value"
+                 style="padding: 1rem; border-left: 1px solid #f0f0f0">
+              <h4>{{selectedChartColumn['comparison_date']}}</h4>
+              <ng-container *ngFor="let v of selectedChartColumn['events']['comparison']; let i = index">
+                <nz-tag [nzColor]="wayItAffectsTag[v['way_it_affects']]">{{v['description']}}</nz-tag>
+              </ng-container>
+            </div>
+          </div>
+        </nz-card>
+        <ng-template #reportsCard>
+          <button nz-button nzType="dashed"><i nz-icon nzType="eye" nzTheme="outline"></i> Ver reporte</button>
+        </ng-template>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-7" style="margin-top: 1rem" *ngIf="eventsData$ | async as eventData">
+        <nz-card nzTitle="Eventos ocurridos" [nzExtra]="eventsCard" class="n-p">
+          <nz-table #expandTable [nzData]="eventData" nzTableLayout="fixed">
+            <thead>
+            <tr>
+              <th width="180px">Descripción</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Afecta</th>
+              <th>Evento padre</th>
+              <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <ng-container *ngFor="let data of expandTable.data">
+              <ng-container *ngFor="let item of mapOfExpandedData[data.key]">
+                <tr *ngIf="(item.parent && item.parent.expand) || !item.parent">
+                  <td
+                    [nzIndentSize]="item.level * 20"
+                    [nzShowExpand]="!!item.children"
+                    [(nzExpand)]="item.expand"
+                    (nzExpandChange)="collapse(mapOfExpandedData[data.key], item, $event)"
+                  >
+                    {{ item.description }}
+                  </td>
+                  <td>{{ item.start_date }}</td>
+                  <td>{{ item.end_date }}</td>
+                  <td>
+                    {{wayItAffects[item.way_it_affects]}}
+                  </td>
+                  <td>
+                    <a href="#">{{item.parent_event}}</a>
+                  </td>
+                  <td>
+                    <button nz-button nzType="dashed"><i nz-icon nzType="eye" nzTheme="outline"></i></button>
+                  </td>
+                </tr>
+              </ng-container>
+            </ng-container>
+            </tbody>
+          </nz-table>
+        </nz-card>
+        <ng-template #eventsCard>
+          <nz-button-group>
+            <button nz-button nzType="dashed"><i nz-icon nzType="eye" nzTheme="outline"></i> Ver todo</button>
+            <button nz-button nzType="dashed" (click)="displayEventModal()"><i nz-icon nzType="plus" nzTheme="outline"></i> Nuevo</button>
+          </nz-button-group>
+        </ng-template>
+      </div>
+      <div class="col-5" style="margin-top: 1rem">
+        <nz-card nzTitle="Acciones tomadas" [nzExtra]="actionsCard" class="n-p">
+<!--          <nz-table #expandTable [nzData]="" nzTableLayout="fixed">-->
+<!--            <thead>-->
+<!--            <tr>-->
+<!--              <th>Descripción</th>-->
+<!--              <th>Se aplicó</th>-->
+<!--              <th>Inicio</th>-->
+<!--            </tr>-->
+<!--            </thead>-->
+<!--            <tbody>-->
+<!--            </tbody>-->
+<!--          </nz-table>-->
+        </nz-card>
+        <ng-template #actionsCard>
+          <nz-button-group>
+            <button nz-button nzType="dashed"><i nz-icon nzType="eye" nzTheme="outline"></i> Ver toda</button>
+            <button nz-button nzType="dashed"><i nz-icon nzType="plus" nzTheme="outline"></i> Nueva</button>
+          </nz-button-group>
+        </ng-template>
+      </div>
+    </div>
+  </ng-container>
+</ng-container>

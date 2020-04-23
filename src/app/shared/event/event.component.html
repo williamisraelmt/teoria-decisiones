@@ -1,0 +1,58 @@
+<form nz-form [formGroup]="form">
+  <nz-form-item>
+    <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="description">Descripción</nz-form-label>
+    <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="La descripción es obligatoria">
+      <input nz-input formControlName="description" id="description" />
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item *ngIf="eventTypes$ | async as eventTypes">
+    <nz-form-label [nzSm]="6" [nzXs]="24" nzFor="event_type_id" nzRequired>Tipo de evento</nz-form-label>
+    <nz-form-control [nzSm]="14" [nzXs]="24">
+      <nz-select formControlName="event_type" nzMode="default" class="field-selector">
+        <nz-option *ngFor="let eventType of eventTypes" [nzLabel]="eventType.description" [nzValue]="eventType.id"></nz-option>
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item>
+    <nz-form-label [nzSm]="6" [nzXs]="24" nzFor="way_it_affects" nzRequired>Forma en la que afecta</nz-form-label>
+    <nz-form-control [nzSm]="14" [nzXs]="24">
+      <nz-select formControlName="way_it_affects" nzMode="default" class="field-selector">
+        <nz-option nzLabel="Positivamente" nzValue="positive"></nz-option>
+        <nz-option nzLabel="Negativamente" nzValue="negative"></nz-option>
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item *ngIf="events$ | async as events">
+    <nz-form-label [nzSm]="6" [nzXs]="24" nzFor="event_id">Evento padre</nz-form-label>
+    <nz-form-control [nzSm]="14" [nzXs]="24">
+      <nz-select formControlName="event_id" nzMode="default" class="field-selector">
+        <nz-option *ngFor="let event of events" [nzLabel]="event.description" [nzValue]="event.id"></nz-option>
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item *ngIf="reports$ | async as reports">
+    <nz-form-label [nzSm]="6" [nzXs]="24" nzFor="reports" nzRequired>Reportes asociados</nz-form-label>
+    <nz-form-control [nzSm]="14" [nzXs]="24">
+      <nz-select formControlName="reports" nzMode="tags" class="field-selector" nzMaxTagCount="5"
+                 nzPlaceHolder="Seleccione los reportes asociados" size="">
+        <nz-option *ngFor="let report of reports" [nzLabel]="report.description" [nzValue]="report.id"></nz-option>
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item>
+    <nz-form-label [nzSm]="6" [nzXs]="24" nzRequired nzFor="description">Fecha de inicio</nz-form-label>
+    <nz-form-control [nzSm]="14" [nzXs]="24" nzErrorTip="La fecha de inicio es obligatoria">
+      <nz-date-picker formControlName="start_date" [nzFormat]="'MM-dd-yyyy'"></nz-date-picker>
+    </nz-form-control>
+  </nz-form-item>
+  <nz-form-item>
+    <nz-form-label [nzSm]="6" [nzXs]="24" nzFor="description">Fecha final</nz-form-label>
+    <nz-form-control [nzSm]="14" [nzXs]="24">
+      <nz-date-picker formControlName="end_date" [nzFormat]="'MM-dd-yyyy'"></nz-date-picker>
+    </nz-form-control>
+  </nz-form-item>
+</form>
+<div *nzModalFooter>
+  <button nz-button nzType="default" (click)="cancel()">Cancelar</button>
+  <button nz-button nzType="primary" (click)="accept()">Aceptar</button>
+</div>

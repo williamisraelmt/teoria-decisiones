@@ -1,0 +1,133 @@
+<ng-container [formGroup]="form">
+
+  <div class="row">
+    <div class="col-12" style="display: flex">
+      <div style="flex: 1; flex-shrink: 0;"></div>
+      <nz-space>
+        <nz-space-item>
+          <nz-range-picker formControlName="date" [nzAllowClear]="false" [nzFormat]="'MM-dd-yyyy'"></nz-range-picker>
+        </nz-space-item>
+        <nz-space-item>
+          <nz-button-group>
+            <button nz-button nzType="default">
+              <label nz-checkbox [formControl]="comparisonEnabled"></label>
+            </button>
+            <button nz-button nzType="primary" *ngIf="comparisonEnabled.value; else comparisonDisabled"
+                    (click)="displayComparisonModal()">
+              <i nz-icon nzType="column-width" nzTheme="outline"></i>
+              Comparación
+            </button>
+            <ng-template #comparisonDisabled>
+              <button nz-button nzType="dashed" disabled>
+                <i nz-icon nzType="column-width" nzTheme="outline"></i>
+                Comparación
+              </button>
+            </ng-template>
+          </nz-button-group>
+        </nz-space-item>
+        <nz-button-group>
+          <button nz-button nzType="default">
+            <label nz-checkbox [formControl]="filterEnabled"></label>
+          </button>
+          <button nz-button nzType="primary" *ngIf="filterEnabled.value; else filterDisabled"
+                  (click)="displayFilterModal()">
+            Filtros
+          </button>
+          <ng-template #filterDisabled>
+            <button nz-button nzType="dashed" disabled>
+              <i nz-icon nzType="search" nzTheme="outline"></i>
+              Filtros
+            </button>
+          </ng-template>
+        </nz-button-group>
+      </nz-space>
+    </div>
+  </div>
+
+  <div class="row" *ngIf="report$ | async as report">
+    <div class="col" style="margin-top: 1rem">
+
+      <nz-card [nzTitle]="report.description" [nzExtra]="reportsCard" class="n-p">
+        <div class="row">
+          <div class="col-12">
+
+          </div>
+        </div>
+
+        <ng-container *ngIf="reportData$ | async as reportData">
+          <nz-table
+            style="width: 84.05vw !important;"
+            #dynamicTable
+            [nzScroll]="{ x: '83.2vw', y: '70vh' }"
+            [nzData]="reportData['current']"
+            [nzTableLayout]="'auto'"
+            [nzTotal]="reportData['count']"
+            [nzPageSize]="25"
+            [nzBordered]="true"
+            [nzSimple]="false"
+            [nzLoading]="false"
+            [nzPaginationPosition]="'bottom'"
+            [nzShowSizeChanger]="false"
+            [nzFrontPagination]="false"
+            [nzShowPagination]="true"
+            [nzSize]="'middle'"
+            (nzQueryParams)="onQueryParamsChange($event)"
+          >
+            <thead>
+            <tr style="font-weight: 600">
+              <th *ngFor="let s of stringFields" [nzColumnKey]="s" [nzSortFn]="true">{{fieldsAsKeys[s]['name']}}</th>
+              <th *ngFor="let s of numericFields" [nzColumnKey]="s" [nzSortFn]="true">{{fieldsAsKeys[s]['name']}}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr style="font-weight: 500">
+              <td *ngFor="let s of stringFields"></td>
+              <td *ngFor="let s of numericFields">{{reportData['current_summary'][s] | number : '1.2-2'}}
+                <small *ngIf="form.get('comparison.enabled').value" class="ant-statistic-content-value-int"
+                       [ngStyle]="{'color': fieldsAsKeys[s]['negative'] === 'less' ?
+                        (reportData['current_summary'][s] < reportData['comparison_summary'][s] ? 'rgb(207, 19, 34)' : 'rgb(30,114,26)' ) :
+                        (reportData['current_summary'][s] < reportData['comparison_summary'][s] ? 'rgb(30,114,26)' : 'rgb(207, 19, 34)'  )
+                         }"
+                       style="
+                margin-left: .2rem;
+                position: absolute;
+                bottom: .7rem;
+                right: .7rem;
+                font-weight: 400">
+                  {{ reportData['current_summary'][s] > reportData['comparison_summary'][s] ? '&#9650;' : '&#9660;'}}
+                  {{
+                  fieldsAsKeys[s]['negative'] === 'less' ?
+                    (reportData['current_summary'][s] - reportData['comparison_summary'][s]) :
+                    (reportData['current_summary'][s] - reportData['comparison_summary'][s] ) | number : '1.2-2'
+                  }}
+                </small>
+              </td>
+            </tr>
+            <ng-container *ngFor="let data of dynamicTable.data">
+              <tr>
+                <td *ngFor="let s of stringFields">{{data[s]}}</td>
+                <td *ngFor="let s of numericFields">{{data[s] | number : '1.2-2'}}</td>
+              </tr>
+            </ng-container>
+            </tbody>
+          </nz-table>
+        </ng-container>
+      </nz-card>
+      <ng-template #reportsCard>
+        <nz-space>
+          <nz-space-item>
+            <nz-select formControlName="fields" nzMode="tags" class="field-selector" nzMaxTagCount="5"
+                       nzPlaceHolder="Seleccione las columnas" size="">
+              <nz-option *ngFor="let option of fieldsList" [nzLabel]="option.name" [nzValue]="option.key"></nz-option>
+            </nz-select>
+          </nz-space-item>
+          <nz-space-item>
+            <button nz-button nzType="dashed" (click)="csvExport()"><i nz-icon nzType="eye" nzTheme="outline"></i>
+              Exportar CSV
+            </button>
+          </nz-space-item>
+        </nz-space>
+      </ng-template>
+    </div>
+  </div>
+</ng-container>

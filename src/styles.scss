@@ -1,1 +1,33 @@
 /* You can add global styles to this file, and also import other style files */
+@import "~bootstrap/dist/css/bootstrap-grid.css";
+@import "~ng-zorro-antd/ng-zorro-antd.compact.min.css";
+
+.n-p-b {
+  .ant-card-body {
+    padding-bottom: 0 !important;
+  }
+}
+
+.n-p {
+  .ant-card-body {
+    padding: 0 !important;
+  }
+
+  .ant-table-pagination {
+    margin-right: 1rem !important;
+  }
+}
+
+.ant-card {
+  .row {
+    margin-right: -12px;
+    margin-left: -12px;
+  }
+}
+
+.field-selector {
+  width: 800px;
+  nz-select-top-control {
+    height: 28px !important;
+  }
+}

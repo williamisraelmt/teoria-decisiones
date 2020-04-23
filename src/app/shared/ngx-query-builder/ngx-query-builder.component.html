@@ -1,0 +1,140 @@
+<div class="ngx-query-builder" [ngClass]="{'disabled': disabled}">
+  <div class="ngx-group-controls">
+    <div class="ngx-condition-switcher">
+      <div class="ant-btn-group">
+        <input name="{{'condition' + index}}" type="radio" class="ngx-switch-radio" [(ngModel)]="data.condition" value="and" #andOption>
+        <label (click)="changeCondition(andOption.value)" class="ant-btn ngx-switch-label">AND</label>
+      </div>
+      <div class="ant-btn-group">
+        <input name="{{'condition' + index}}" type="radio" class="ngx-switch-radio" [(ngModel)]="data.condition" value="or" #orOption>
+        <label (click)="changeCondition(orOption.value)" class="ant-btn ngx-switch-label">OR</label>
+      </div>
+    </div>
+
+    <div class="ant-btn-group">
+      <button type="button" class="ant-btn ant-btn-primary" (click)="addRule()">
+        (+) Regla
+      </button>
+      <button type="button" class="ant-btn ant-btn-primary" (click)="addRuleSet()">
+        (+) Grupo
+      </button>
+      <ng-container *ngIf="hasParentRuleSet()">
+        <button type="button" class="ant-btn ant-btn-danger" (click)="removeRuleSet(index)">
+          (-) Borrar
+        </button>
+      </ng-container>
+    </div>
+  </div>
+
+
+  <div class="ngx-conditions">
+
+    <ul *ngIf="data.rules && data.rules.length > 0">
+      <li *ngFor="let child of data.rules; let i = index" class="ngx-connector">
+
+        <!-- rule -->
+        <ng-container *ngIf="!child.rules">
+
+          <div class="ngx-rule-wrap">
+            <div class="ngx-rule">
+
+              <div class="ngx-field">
+                <select class="ant-picker" [(ngModel)]="child.field" (change)="changeField(child, i)" [disabled]="disabled">
+                  <option *ngFor="let field of getFields()" [value]="field.value">
+                    {{field.name}}
+                  </option>
+                </select>
+              </div>
+
+              <div class="ngx-operator">
+                <select class="ant-picker" [(ngModel)]="child.operator" [disabled]="disabled">
+                  <option *ngFor="let operator of operatorsService.getOperators(child, fieldMap)" [value]="operator">
+                    {{operatorsService.getOperatorDisplayName(operator)}}
+                  </option>
+                </select>
+              </div>
+
+              <div class="ngx-value" [ngSwitch]="getInputType(child)">
+
+                <!-- STING -->
+                <ng-container *ngSwitchCase="operatorsService.INPUT_TYPE_STRING">
+                  <input class="ant-input" type="text" [(ngModel)]="child.value" [disabled]="disabled">
+                </ng-container>
+
+                <!-- INTEGER -->
+                <ng-container *ngSwitchCase="operatorsService.INPUT_TYPE_INTEGER">
+                  <input class="ant-input" type="number" [(ngModel)]="child.value" [disabled]="disabled">
+                </ng-container>
+
+                <!-- DOUBLE -->
+                <ng-container *ngSwitchCase="operatorsService.INPUT_TYPE_DOUBLE">
+                  <input class="ant-input" type="number" [(ngModel)]="child.value" [disabled]="disabled">
+                </ng-container>
+
+                <!-- DATE -->
+                <ng-container *ngSwitchCase="operatorsService.INPUT_TYPE_DATE">
+                  <nz-date-picker  [(ngModel)]="child.value" [disabled]="disabled" (ngModelChange)="child.value = $event" [nzFormat]="'MM-dd-yyyy'"></nz-date-picker>
+                </ng-container>
+
+                <!-- TIME -->
+                <ng-container *ngSwitchCase="operatorsService.INPUT_TYPE_TIME">
+                  <nz-time-picker [(ngModel)]="child.value" [disabled]="disabled" ></nz-time-picker>
+                </ng-container>
+
+                <!-- BOOLEAN -->
+                <ng-container *ngSwitchCase="operatorsService.INPUT_TYPE_BOOLEAN">
+                  <div class="ngx-boolean-wrap">
+                    <div class="ngx-boolean">
+                      <input id="{{'booleanYes' + i}}" name="{{'boolean' + i}}" type="radio" class="ngx-radio-btn" [(ngModel)]="child.value" [value]="true" [disabled]="disabled">
+                      <label for="{{'booleanYes' + i}}" class="ngx-label">Yes</label>
+                    </div>
+                    <div class="ngx-boolean">
+                      <input id="{{'booleanNo' + i}}" name="{{'boolean' + i}}" type="radio" class="ngx-radio-btn" [(ngModel)]="child.value" [value]="false" [disabled]="disabled">
+                      <label for="{{'booleanNo' + i}}" class="ngx-label">No</label>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- SELECT -->
+                <ng-container *ngSwitchCase="operatorsService.INPUT_TYPE_SELECT">
+                  <select class="ant-picker" [(ngModel)]="child.value" [disabled]="disabled">
+                    <option *ngFor="let opt of getRuleOptions(child)" [value]="opt.value">
+                      {{opt.name}}
+                    </option>
+                  </select>
+                </ng-container>
+
+                <!-- MULTI_SELECT -->
+                <ng-container *ngSwitchCase="operatorsService.INPUT_TYPE_MULTI_SELECT">
+                  <select class="ant-input ngx-multi-select" [(ngModel)]="child.value" [disabled]="disabled" multiple>
+                    <option *ngFor="let opt of getRuleOptions(child)" [ngValue]="opt.value">
+                      {{opt.name}}
+                    </option>
+                  </select>
+                </ng-container>
+
+              </div>
+
+            </div>
+            <div class="ngx-rule-controls">
+              <button type="button" class="ant-btn ant-btn-danger" (click)="removeRule(i)">
+                (-) Borrar
+              </button>
+            </div>
+          </div>
+
+        </ng-container>
+
+        <!-- rule set -->
+        <ng-container *ngIf="child.rules">
+          <ngx-query-builder [data]="child" [fieldMap]="fieldMap" [parent]="data"
+                             [disabled]="disabled" [index]="i">
+          </ngx-query-builder>
+        </ng-container>
+
+      </li>
+    </ul>
+
+  </div>
+</div>
+
